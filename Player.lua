@@ -10,23 +10,20 @@ function Player:new(x, y, obstacles)
     self.speed = 200
     self.width = 16
     self.height = 18
-    self.obstacles = obstacles or {} -- Pass obstacles here
+    self.obstacles = obstacles or {} 
     return self
 end
 
 function Player:load()
     local playerImage = love.graphics.newImage("assets/oldHero.png")
-    animation = newAnimation(playerImage, self.width, self.height, 1) -- Width, height, and duration for animation
+    animation = newAnimation(playerImage, self.width, self.height, 1) 
 end
 
 function Player:update(dt)
-    -- Update the animation timer
     animation.currentTime = animation.currentTime + dt
     if animation.currentTime >= animation.duration then
         animation.currentTime = animation.currentTime - animation.duration
     end
-
-    -- Player movement logic
     local nextX, nextY = self.x, self.y
     if love.keyboard.isDown("w") then
         nextY = self.y - self.speed * dt
@@ -40,18 +37,15 @@ function Player:update(dt)
     if love.keyboard.isDown("d") then
         nextX = self.x + self.speed * dt
     end
-
-    -- Check for collisions with obstacles
     if not self:checkCollision(nextX, nextY) then
         self.x, self.y = nextX, nextY
     end
 end
 
 function Player:draw()
-    -- Draw the player animation
     local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
-    love.graphics.setColor(1, 1, 1) -- Reset color to white for sprite
-    love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], self.x, self.y, 0, 4, 4) -- Scale to make the sprite larger
+    love.graphics.setColor(1, 1, 1) 
+    love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], self.x, self.y, 0, 1.8, 1.8) 
 end
 
 function Player:checkCollision(x, y)
