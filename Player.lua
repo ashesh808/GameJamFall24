@@ -10,8 +10,8 @@ function Player:new(x, y, obstacles)
     self.speed = 200
     self.width = 12
     self.height = 18
-    self.health = 100
-    self.maxHealth = 100
+    self.health = 10000
+    self.maxHealth = 10000
     self.obstacles = obstacles or {}
 
     
@@ -39,10 +39,6 @@ function Player:load()
 end
 
 function Player:update(dt, ghosts)
-    -- animation.currentTime = animation.currentTime + dt
-    -- if animation.currentTime >= animation.duration then
-    --     animation.currentTime = animation.currentTime - animation.duration
-    -- end
 
     local nextX, nextY = self.x, self.y
     local moving = false

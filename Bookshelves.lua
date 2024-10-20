@@ -14,7 +14,7 @@ end
 
 function Bookshelf:load()
     -- Load the bookshelf image
-    bookshelfImage = love.graphics.newImage("assets/bookshelf.png")
+    bookshelfImage = love.graphics.newImage("assets/Bookshelf2.png")
 end
 
 function Bookshelf:draw()
@@ -28,3 +28,5 @@ function Bookshelf:draw()
 
     end
 end
+
+

@@ -5,8 +5,8 @@ local animation
 
 function Ghost:new(x, y, obstacles)
     local self = setmetatable({}, Ghost)
-    self.x = x or 200 -- Different starting position from player
-    self.y = y or 200
+    self.x = x or 300 -- Different starting position from player
+    self.y = y or 300
     self.speed = 150 -- Ghosts can be slower or faster than players
     self.width = 32
     self.height = 32
@@ -56,3 +56,4 @@ function Ghost:checkCollision(x, y)
     end
     return false
 end
+
