@@ -10,10 +10,9 @@ function Player:new(x, y, obstacles)
     self.speed = 200
     self.width = 16
     self.height = 18
-    self.health = 100
-    self.maxHealth = 100
+    self.health = 1000
+    self.maxHealth = 1000
     self.obstacles = obstacles or {}
-    
     return self
 end
 
@@ -27,6 +26,8 @@ function Player:update(dt, ghosts)
     if animation.currentTime >= animation.duration then
         animation.currentTime = animation.currentTime - animation.duration
     end
+
+    -- Player movement logic
     local nextX, nextY = self.x, self.y
     if love.keyboard.isDown("w") then
         nextY = self.y - self.speed * dt
@@ -40,9 +41,20 @@ function Player:update(dt, ghosts)
     if love.keyboard.isDown("d") then
         nextX = self.x + self.speed * dt
     end
+
+    -- Ensure the player doesn't move off the top or bottom of the screen
+    if nextY < 0 then
+        nextY = 0 -- Prevent moving off the top
+    elseif nextY + self.height > love.graphics.getHeight() then
+        nextY = love.graphics.getHeight() - self.height -- Prevent moving off the bottom
+    end
+
+    -- Ensure the player doesn't move off the left or right if no collision
     if not self:checkCollision(nextX, nextY) then
         self.x, self.y = nextX, nextY
     end
+
+    -- Check for collisions with ghosts
     for _, ghost in ipairs(ghosts) do
         if self:checkCollisionWithGhost(ghost) then
             self:takeDamage(10) -- Assume 10 damage per collision
@@ -62,28 +74,17 @@ function Player:takeDamage(amount)
     self.health = self.health - amount
     if self.health < 0 then
         self.health = 0
-    
     end
 end
 
 function Player:draw()
+    -- Draw the player sprite
     local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
     love.graphics.setColor(1, 1, 1) 
-    love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], self.x, self.y, 0, 1.8, 1.8) 
+    love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], self.x, self.y, 0, 1.8, 1.8)
 
+    -- Draw health bar
     self:drawHealthBar()
-end
-
-function Player:checkCollision(x, y)
-    for _, obstacle in ipairs(self.obstacles) do
-        if x < obstacle.x + obstacle.width and
-           x + self.width > obstacle.x and
-           y < obstacle.y + obstacle.height and
-           y + self.height > obstacle.y then
-            return true
-        end
-    end
-    return false
 end
 
 function Player:drawHealthBar()
@@ -106,6 +107,18 @@ function Player:drawHealthBar()
     love.graphics.setColor(1, 1, 1)
 end
 
+function Player:checkCollision(x, y)
+    for _, obstacle in ipairs(self.obstacles) do
+        if x < obstacle.x + obstacle.width and
+           x + self.width > obstacle.x and
+           y < obstacle.y + obstacle.height and
+           y + self.height > obstacle.y then
+            return true
+        end
+    end
+    return false
+end
+
 function newAnimation(image, width, height, duration)
     local animation = {}
     animation.spriteSheet = image
@@ -119,4 +132,3 @@ function newAnimation(image, width, height, duration)
     animation.currentTime = 0
     return animation
 end
-
