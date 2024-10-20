@@ -6,7 +6,6 @@ local logo
 local player
 local ghosts = {}
 local bookshelves = {} 
-
 function love.load()
     player = Player:new(100, 100, bookshelves) 
     player:load()
@@ -19,9 +18,9 @@ function love.load()
     end
 
     -- Initialize bookshelves with the same dimensions as obstacles
-    local bookshelf1 = Bookshelf:new(300, 150, 200, 200)
-    local bookshelf2 = Bookshelf:new(100, 300, 200, 200)
-    local bookshelf3 = Bookshelf:new(500, 400, 200, 200)
+    local bookshelf1 = Bookshelf:new(300, 150, 50, 50)
+    local bookshelf2 = Bookshelf:new(100, 300, 50, 50)
+    local bookshelf3 = Bookshelf:new(500, 400, 50, 50)
 
     -- Load bookshelf images
     bookshelf1:load()
@@ -38,20 +37,22 @@ function love.load()
 end
 
 function love.update(dt)
-    player:update(dt)
+    player:update(dt, ghosts)
 
     -- Update ghosts
     for _, ghost in ipairs(ghosts) do
         ghost:update(dt)
     end
+
 end
 
 function love.draw()
-    love.graphics.clear(245 / 255, 222 / 255, 179 / 255)
+    love.graphics.clear(245 / 255, 222 / 255, 179 / 255) --background of whole game
 
     -- Draw bookshelves instead of obstacles
     for _, bookshelf in ipairs(bookshelves) do
         bookshelf:draw() -- Draw the bookshelf images
+        bookshelf:drawCollisionBox()
     end
 
     -- Draw the player
@@ -68,4 +69,5 @@ function love.draw()
     local windowWidth = love.graphics.getWidth()
     local scaleFactor = 0.20
     love.graphics.draw(logo, windowWidth - (logoWidth * scaleFactor) - 10, 10, 0, scaleFactor, scaleFactor)
+
 end
