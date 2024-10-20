@@ -1,6 +1,7 @@
 require "Player"
 require "Ghost"
 require "Bookshelves" 
+require "bullet"
 
  anim8 = require 'libraries/anim8'
 
@@ -72,7 +73,6 @@ function love.load()
         end
     end
 
-
 function love.update(dt)
     player:update(dt, ghosts)
 
@@ -100,6 +100,10 @@ function love.draw()
         ghost:draw()
     end
 
+    function love.keypressed(key)
+        player:keyPressed(key)
+    end
+
     -- Draw the logo at the top right-hand corner with scaling
     local logoWidth = logo:getWidth()
     local logoHeight = logo:getHeight()
@@ -107,4 +111,5 @@ function love.draw()
     local scaleFactor = 0.20
     love.graphics.draw(logo, windowWidth - (logoWidth * scaleFactor) - 10, 10, 0, scaleFactor, scaleFactor)
 
+    
 end

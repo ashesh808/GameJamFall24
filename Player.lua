@@ -10,15 +10,24 @@ function Player:new(x, y, obstacles)
     self.speed = 200
     self.width = 12
     self.height = 18
-    self.health = 10000
-    self.maxHealth = 10000
+    self.health = 100
+    self.maxHealth = 100
     self.obstacles = obstacles or {}
+    self.bullets = {} -- Initialize bullets table
 
     
     return self
 end
 
 function Player:load()
+
+    function Player:keyPressed(key)
+    if key == "space" then
+        -- Create and store a new bullet in the bullets table
+        local bullet = Bullet:new(self.x + self.width / 2 - 5, self.y) -- Adjust position if needed
+        table.insert(self.bullets, bullet)
+    end
+end
     -- Load the player sprite sheet
     local playerImage = love.graphics.newImage("assets/player-sheet.png")
     self.spriteSheet = playerImage
@@ -83,7 +92,19 @@ function Player:update(dt, ghosts)
             break -- Exit the loop after taking damage
         end
     end
+    
+    for i = #self.bullets, 1, -1 do
+        local bullet = self.bullets[i]
+        bullet:update(dt)
+
+        -- Remove bullet if it's off-screen
+        if bullet.y < 0 then
+            table.remove(self.bullets, i)
+        end
+    end
 end
+
+
 
 
 function Player:checkCollisionWithGhost(ghost)
@@ -108,6 +129,10 @@ function Player:draw()
 
     -- Draw health bar
     self:drawHealthBar()
+
+    for _, bullet in ipairs(self.bullets) do
+        bullet:draw()
+    end
 end
 
 function Player:checkCollision(x, y)
@@ -155,4 +180,3 @@ function newAnimation(image, width, height, duration)
     animation.currentTime = 0
     return animation
 end
-
