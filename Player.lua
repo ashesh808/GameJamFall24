@@ -1,7 +1,8 @@
 Player = {}
 Player.__index = Player
 
-local anim8 = require 'library/anim8' 
+local anim8 = require 'libraries/anim8' 
+local Bullet = require 'Bullet'  -- Assuming you have a separate Bullet class
 
 function Player:new(x, y, obstacles)
     local self = setmetatable({}, Player)
@@ -10,9 +11,10 @@ function Player:new(x, y, obstacles)
     self.speed = 200
     self.width = 12
     self.height = 18
-    self.health = 100
-    self.maxHealth = 100
+    self.health = 10000
+    self.maxHealth = 10000
     self.obstacles = obstacles or {}
+    self.bullets = {}  -- Initialize bullets table
 
     return self
 end
@@ -33,15 +35,18 @@ function Player:load()
         up = anim8.newAnimation(grid('1-4', 4), 0.2)     -- 4 frames on row 4 for moving up
     }
 
-    -- Set the initial animation to down
+    -- Set the initial animation
     self.anim = self.animations.down
+
+    -- Load the ghost collision sound effect
+    self.ghostCollisionSound = love.audio.newSource("assets/sounds/ghostkillSound.wav", "static")
 end
 
 function Player:update(dt, ghosts)
     local nextX, nextY = self.x, self.y
     local moving = false
 
-    -- Movement and animation assignment
+    -- Player movement and animation
     if love.keyboard.isDown("w") then
         nextY = self.y - self.speed * dt
         self.anim = self.animations.up
@@ -60,23 +65,17 @@ function Player:update(dt, ghosts)
         moving = true
     end
 
-    -- Only update animation if the player is moving
+    -- Update animation if moving
     if moving then
         self.anim:resume()
         self.anim:update(dt)
-    else 
-        -- Pause animation when not moving and set to idle frame
-        self.anim:gotoFrame(2)
+    else
+        self.anim:gotoFrame(2)  -- Pause animation when not moving
     end
 
-    -- Ensure the player doesn't move off-screen
-    if nextY < 0 then
-        nextY = 0 -- Prevent moving off the top
-    elseif nextY + self.height > love.graphics.getHeight() then
-        nextY = love.graphics.getHeight() - self.height -- Prevent moving off the bottom
-    end
-
-    -- Check for obstacle collisions
+    -- Ensure player stays within the screen bounds
+    if nextY < 0 then nextY = 0
+    elseif nextY + self.height > love.graphics.getHeight() then nextY = love.graphics.getHeight() - self.height end
     if not self:checkCollision(nextX, nextY) then
         self.x, self.y = nextX, nextY
     end
@@ -84,9 +83,42 @@ function Player:update(dt, ghosts)
     -- Check for collisions with ghosts
     for _, ghost in ipairs(ghosts) do
         if self:checkCollisionWithGhost(ghost) then
-            self:takeDamage(10) -- Assume 10 damage per collision
-            break -- Exit the loop after taking damage
+            self:takeDamage(10)  -- Assume 10 damage per collision
+            break  -- Exit the loop after taking damage
         end
+    end
+
+    -- Update bullets
+    for i = #self.bullets, 1, -1 do
+        local bullet = self.bullets[i]
+        bullet:update(dt)
+
+        -- Remove bullet if it's off-screen
+        if bullet.y < 0 then
+            table.remove(self.bullets, i)
+        end
+    end
+end
+
+function Player:draw()
+    -- Draw the player sprite with animation
+    love.graphics.setColor(1, 1, 1)
+    self.anim:draw(self.spriteSheet, self.x, self.y, 0, 1.8, 1.8)
+
+    -- Draw health bar
+    self:drawHealthBar()
+
+    -- Draw bullets
+    for _, bullet in ipairs(self.bullets) do
+        bullet:draw()
+    end
+end
+
+function Player:keyPressed(key)
+    if key == "space" then
+        -- Fire a bullet when the space key is pressed
+        local bullet = Bullet:new(self.x + self.width / 2 - 2, self.y)  -- Adjust bullet position if needed
+        table.insert(self.bullets, bullet)
     end
 end
 
@@ -102,15 +134,8 @@ function Player:takeDamage(amount)
     if self.health < 0 then
         self.health = 0
     end
-end
-
-function Player:draw()
-    -- Draw the player sprite with animation
-    love.graphics.setColor(1, 1, 1)
-    self.anim:draw(self.spriteSheet, self.x, self.y, 0, 1.8, 1.8)
-
-    -- Draw the player's health bar
-    self:drawHealthBar()
+    -- Play the ghost collision sound effect
+    self.ghostCollisionSound:play()
 end
 
 function Player:checkCollision(x, y)

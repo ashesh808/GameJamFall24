@@ -1,19 +1,25 @@
 require "Player"
 require "Ghost"
 require "Bookshelves"
-anim8 = require 'library/anim8'
+require "bullet"
+anim8 = require 'libraries/anim8'
 
+local backgroundMusic  
 local largeFont
 local logo 
 local startImage 
 local player
 local ghosts = {}
+local bookshelves = {}
 local currentScene = 1
-local gameState = "start"  
+local gameState = "start"  -- Start with the 'start' screen
+local windowWidth, windowHeight = 800, 600 -- Game window dimensions
+local maxBookshelves = 6 -- number of bookshelves to generate 
 
+-- Define the scenes with different backgrounds and bookshelves
 local scenes = {
     {
-        backgroundColor = {245 / 255, 222 / 255, 179 / 255}, -- Light brown
+        backgroundImage = love.graphics.newImage("assets/carpet.jpg"),  -- Load the background image
         bookshelves = {
             Bookshelf:new(300, 150, 50, 50),
             Bookshelf:new(100, 300, 50, 50),
@@ -21,7 +27,7 @@ local scenes = {
         }
     },
     {
-        backgroundColor = {200 / 255, 230 / 255, 201 / 255}, -- Light green
+        backgroundImage = love.graphics.newImage("assets/wood.jpg"),
         bookshelves = {
             Bookshelf:new(100, 50, 50, 50),
             Bookshelf:new(160, 50, 50, 50),
@@ -38,10 +44,17 @@ local scenes = {
 
 function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")
+
+    -- Load background music
+    backgroundMusic = love.audio.newSource("assets/sounds/backgroundMusic.wav", "stream")
+    backgroundMusic:setLooping(true) 
+    backgroundMusic:setVolume(0.5)    
+    backgroundMusic:play()            
+
     startImage = love.graphics.newImage("assets/millerinfo.jpg")
     largeFont = love.graphics.newFont(36)
 
-    -- Initialize player and ghosts
+    -- Initialize player and ghosts for the first scene
     player = Player:new(100, 100, scenes[currentScene].bookshelves)
     player:load()
 
@@ -58,6 +71,51 @@ function love.load()
 
     -- Load the logo
     logo = love.graphics.newImage("assets/scsu.png")
+
+    -- Generate random bookshelves
+    generateRandomBookshelves(maxBookshelves)
+end
+
+-- Generate random bookshelves
+function generateRandomBookshelves(count)
+    local minDistance = 30 -- Minimum distance between bookshelves
+
+    for i = 1, count do
+        local bookshelf
+        local validPosition = false
+
+        while not validPosition do
+            -- Randomize position and size within the game window
+            local width = math.random(50, 200)  -- Random width between 50 and 200 pixels
+            local height = math.random(30, 100) -- Random height between 30 and 100 pixels
+            local x = math.random(0, windowWidth - width) -- Random x within the window, allowing room for the width
+            local y = math.random(0, windowHeight - height) -- Random y within the window, allowing room for the height
+
+            bookshelf = Bookshelf:new(x, y, width, height)
+            bookshelf:load()
+
+            -- Check for distance with existing bookshelves
+            validPosition = true -- Assume it's valid until proven otherwise
+
+            for _, existingBookshelf in ipairs(bookshelves) do
+                -- Get existing bookshelf properties
+                local existingX, existingY = existingBookshelf.x, existingBookshelf.y
+                local existingWidth, existingHeight = existingBookshelf.width, existingBookshelf.height
+
+                -- Check for overlap or proximity
+                if not (x + width + minDistance < existingX or 
+                        y + height + minDistance < existingY or 
+                        x - minDistance > existingX + existingWidth or 
+                        y - minDistance > existingY + existingHeight) then
+                    validPosition = false
+                    break -- No need to check further if an overlap is found
+                end
+            end
+        end
+
+        -- After finding a valid position, add the bookshelf to the list
+        table.insert(bookshelves, bookshelf)
+    end
 end
 
 function changeScene(direction)
@@ -112,6 +170,10 @@ function love.update(dt)
     end
 end
 
+function love.keypressed(key)
+    player:keyPressed(key)  -- Fire bullets with the player's key press
+end
+
 function love.draw()
     if gameState == "start" then
         -- Start screen
@@ -122,10 +184,23 @@ function love.draw()
     elseif gameState == "play" then
         -- Play scene
         local scene = scenes[currentScene]
-        love.graphics.clear(scene.backgroundColor[1], scene.backgroundColor[2], scene.backgroundColor[3])
+
+        -- Check if the scene has a background image
+        if scene.backgroundImage then
+            love.graphics.draw(scene.backgroundImage, 0, 0, 0, love.graphics.getWidth() / scene.backgroundImage:getWidth(), love.graphics.getHeight() / scene.backgroundImage:getHeight())
+        else
+            -- If no image, use the background color
+            love.graphics.clear(1, 1, 1)
+        end
 
         -- Draw the bookshelves
         for _, bookshelf in ipairs(scene.bookshelves) do
+            bookshelf:draw()
+            bookshelf:drawCollisionBox()
+        end
+
+        -- Draw random bookshelves
+        for _, bookshelf in ipairs(bookshelves) do
             bookshelf:draw()
             bookshelf:drawCollisionBox()
         end
