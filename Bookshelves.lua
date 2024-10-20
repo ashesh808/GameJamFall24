@@ -24,7 +24,7 @@ function Bookshelf:draw()
     function Bookshelf:drawCollisionBox()
          love.graphics.setColor(0,1,1)
          love.graphics.rectangle("line", self.x, self.y, self.width, self.height)
-         love.graphics.setColor(1, 1, 1)
+         love.graphics.setColor(1, 1, 1) 
 
     end
 end

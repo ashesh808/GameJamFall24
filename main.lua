@@ -2,11 +2,14 @@ require "Player"
 require "Ghost"
 require "Bookshelves" 
 
+ anim8 = require 'libraries/anim8'
+
 local logo 
 local player
 local ghosts = {}
 local bookshelves = {} 
 function love.load()
+    love.graphics.setDefaultFilter("nearest", "nearest")
     player = Player:new(100, 100, bookshelves) 
     player:load()
 
@@ -18,9 +21,9 @@ function love.load()
     end
 
     -- Initialize bookshelves with the same dimensions as obstacles
-    local bookshelf1 = Bookshelf:new(300, 150, 50, 50)
-    local bookshelf2 = Bookshelf:new(100, 300, 50, 50)
-    local bookshelf3 = Bookshelf:new(500, 400, 50, 50)
+    local bookshelf1 = Bookshelf:new(300, 150, 200, 50)
+    local bookshelf2 = Bookshelf:new(100, 300, 150, 100)
+    local bookshelf3 = Bookshelf:new(500, 400, 80, 50)
 
     -- Load bookshelf images
     bookshelf1:load()
