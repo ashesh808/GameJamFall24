@@ -1,13 +1,13 @@
 Ghost = {}
 Ghost.__index = Ghost
 
-local animation
+local anim8 = require 'library/anim8'  -- Ensure anim8 is required
 
 function Ghost:new(x, y, obstacles)
     local self = setmetatable({}, Ghost)
-    self.x = x or 200 -- Different starting position from player
+    self.x = x or 200
     self.y = y or 200
-    self.speed = 150 -- Ghosts can be slower or faster than players
+    self.speed = 100
     self.width = 32
     self.height = 32
     self.obstacles = obstacles or {}
@@ -15,15 +15,20 @@ function Ghost:new(x, y, obstacles)
 end
 
 function Ghost:load()
+    -- Load the ghost sprite sheet
     local ghostImage = love.graphics.newImage("assets/ghost.png")
-    animation = newAnimation(ghostImage, self.width, self.height, 1)
+    self.spriteSheet = ghostImage
+
+    -- Create a grid for the ghost animation using anim8
+    local grid = anim8.newGrid(self.width, self.height, ghostImage:getWidth(), ghostImage:getHeight())
+
+    -- Create a simple animation (adjust the frame range and duration as needed)
+    self.anim = anim8.newAnimation(grid('1-4', 1), 0.2)  -- 4 frames, 0.2 seconds per frame
 end
 
 function Ghost:update(dt)
-    -- Simple AI for ghost movement
+    -- Simple AI for ghost movement (you can modify this logic)
     local nextX, nextY = self.x, self.y
-
-    -- Move randomly or towards the player in this simple AI
     if math.random() < 0.5 then
         nextX = self.x + (self.speed * dt * (math.random(2) == 1 and 1 or -1))
     end
@@ -35,14 +40,15 @@ function Ghost:update(dt)
     if not self:checkCollision(nextX, nextY) then
         self.x, self.y = nextX, nextY
     end
+
+    -- Update animation
+    self.anim:update(dt)
 end
 
 function Ghost:draw()
-    local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
+    -- Draw the ghost with the current animation frame
     love.graphics.setColor(1, 1, 1)
-    local scaleX = 0.5
-    local scaleY = 0.5 
-    love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], self.x, self.y, 0, scaleX, scaleY)
+    self.anim:draw(self.spriteSheet, self.x, self.y, 0, 0.8, 0.8)  -- Scale by 1.5
 end
 
 function Ghost:checkCollision(x, y)

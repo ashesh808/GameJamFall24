@@ -1,9 +1,9 @@
 require "Player"
 require "Ghost"
 require "Bookshelves"
+anim8 = require 'library/anim8'
 
 local largeFont
-
 local logo 
 local startImage 
 local player
@@ -37,19 +37,26 @@ local scenes = {
 }
 
 function love.load()
+    love.graphics.setDefaultFilter("nearest", "nearest")
     startImage = love.graphics.newImage("assets/millerinfo.jpg")
     largeFont = love.graphics.newFont(36)
 
+    -- Initialize player and ghosts
     player = Player:new(100, 100, scenes[currentScene].bookshelves)
     player:load()
+
     for i = 1, 10 do
         local ghost = Ghost:new(200 + i * 50, 200 + i * 50, scenes[currentScene].bookshelves)
         ghost:load()
         table.insert(ghosts, ghost)
     end
+
+    -- Load bookshelves for the current scene
     for _, bookshelf in ipairs(scenes[currentScene].bookshelves) do
         bookshelf:load()
     end
+
+    -- Load the logo
     logo = love.graphics.newImage("assets/scsu.png")
 end
 
@@ -66,14 +73,17 @@ function changeScene(direction)
         end
     end
 
+    -- Reset player position
     player.x = 100
     player.y = 100
 
-    bookshelves = scenes[currentScene].bookshelves
+    -- Load bookshelves for the new scene
+    local bookshelves = scenes[currentScene].bookshelves
     for _, bookshelf in ipairs(bookshelves) do
         bookshelf:load()
     end
 
+    -- Initialize new ghosts for the new scene
     ghosts = {}
     for i = 1, 10 do
         local ghost = Ghost:new(200 + i * 50, 200 + i * 50, bookshelves)
@@ -94,6 +104,8 @@ function love.update(dt)
         elseif player.x < 0 then
             changeScene("previous")
         end
+
+        -- Update ghosts
         for _, ghost in ipairs(ghosts) do
             ghost:update(dt)
         end
@@ -102,30 +114,31 @@ end
 
 function love.draw()
     if gameState == "start" then
+        -- Start screen
         love.graphics.draw(startImage, 0, 0, 0, love.graphics.getWidth() / startImage:getWidth(), love.graphics.getHeight() / startImage:getHeight())
         love.graphics.setFont(largeFont)
         love.graphics.setColor(1, 1, 1)
         love.graphics.printf("Press Enter to Start", 0, love.graphics.getHeight() - 50, love.graphics.getWidth(), "center")
     elseif gameState == "play" then
-        -- Set the background color based on the current scene
+        -- Play scene
         local scene = scenes[currentScene]
         love.graphics.clear(scene.backgroundColor[1], scene.backgroundColor[2], scene.backgroundColor[3])
 
-        -- Draw the bookshelves for the current scene
+        -- Draw the bookshelves
         for _, bookshelf in ipairs(scene.bookshelves) do
             bookshelf:draw()
             bookshelf:drawCollisionBox()
         end
 
-        -- Draw the player
+        -- Draw player
         player:draw()
 
-        -- Draw the ghosts
+        -- Draw ghosts
         for _, ghost in ipairs(ghosts) do
             ghost:draw()
         end
 
-        -- Draw the logo at the top right-hand corner with scaling
+        -- Draw the logo in the top right-hand corner
         local logoWidth = logo:getWidth()
         local windowWidth = love.graphics.getWidth()
         local scaleFactor = 0.20
